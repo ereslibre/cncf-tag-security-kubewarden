@@ -9,11 +9,8 @@
     "apiVersion": "networking.k8s.io/v1",
     "kind": "Ingress",
     "metadata": {
-      "name": "valid-ingress",
-      "namespace": "cncf-tag-security-demo",
-      "annotations": {
-        "cert-manager.io/cluster-issuer": "letsencrypt-production"
-      }
+      "name": "invalid-ingress",
+      "namespace": "cncf-tag-security-demo"
     },
     "spec": {
       "rules": [

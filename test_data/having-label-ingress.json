@@ -11,8 +11,8 @@
     "metadata": {
       "name": "valid-ingress",
       "namespace": "cncf-tag-security-demo",
-      "annotations": {
-        "cert-manager.io/cluster-issuer": "letsencrypt-production"
+      "labels": {
+        "owner-team": "some-team"
       }
     },
     "spec": {

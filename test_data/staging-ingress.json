@@ -10,7 +10,7 @@
     "kind": "Ingress",
     "metadata": {
       "name": "invalid-ingress",
-      "namespace": "cncf-security-tag-demo",
+      "namespace": "cncf-tag-security-demo",
       "annotations": {
         "cert-manager.io/cluster-issuer": "letsencrypt-staging"
       }

@@ -291,14 +291,14 @@ func cleanupKwctl() error {
 func setupKubernetes() error {
 	cleanupKwctl()
 	cleanupKubernetes()
-	exec.Command("kubectl", "create", "namespace", "rancher-online-meetup-21").Run()
+	exec.Command("kubectl", "create", "namespace", "cncf-tag-security-demo").Run()
 	exec.Command("kubectl", "delete", "clusteradmissionpolicy", "--all").Run()
 	return nil
 }
 
 func cleanupKubernetes() error {
 	cleanupKwctl()
-	exec.Command("kubectl", "delete", "namespace", "rancher-online-meetup-21").Run()
+	exec.Command("kubectl", "delete", "namespace", "cncf-tag-security-demo").Run()
 	exec.Command("kubectl", "delete", "clusteradmissionpolicy", "--all").Run()
 	return nil
 }
