@@ -164,6 +164,18 @@ func gatekeeperPolicyBuildAndRun() *demo.Run {
 	))
 
 	r.Step(demo.S(
+		"Annotate policy",
+	), demo.S(
+		"kwctl annotate -m policies/gatekeeper/metadata.yaml -o policies/gatekeeper/annotated-policy.wasm policies/gatekeeper/policy.wasm",
+	))
+
+	r.Step(demo.S(
+		"Inspect annotated policy",
+	), demo.S(
+		"kwctl inspect policies/gatekeeper/annotated-policy.wasm",
+	))
+
+	r.Step(demo.S(
 		"Show a request that is valid -- contains an 'owner-team' key",
 	), demo.S(
 		"bat test_data/having-label-deployment.json",
@@ -172,10 +184,10 @@ func gatekeeperPolicyBuildAndRun() *demo.Run {
 	r.Step(demo.S(
 		"Run policy with a request that is valid",
 	), demo.S(
-		"kwctl run -e gatekeeper",
+		"kwctl run",
 		`--settings-json '{"labels":[{"key":"owner-team"}]}'`,
 		"--request-path test_data/having-label-deployment.json",
-		"policies/gatekeeper/policy.wasm | jq",
+		"policies/gatekeeper/annotated-policy.wasm | jq",
 	))
 
 	r.Step(demo.S(
@@ -187,10 +199,10 @@ func gatekeeperPolicyBuildAndRun() *demo.Run {
 	r.StepCanFail(demo.S(
 		"Run policy with a request that is invalid",
 	), demo.S(
-		"kwctl run -e gatekeeper",
+		"kwctl run",
 		`--settings-json '{"labels":[{"key":"owner-team"}]}'`,
 		"--request-path test_data/missing-label-deployment.json",
-		"policies/gatekeeper/policy.wasm | jq",
+		"policies/gatekeeper/annotated-policy.wasm | jq",
 	))
 
 	return r
@@ -216,6 +228,18 @@ func opaPolicyBuildAndRun() *demo.Run {
 	))
 
 	r.Step(demo.S(
+		"Annotate policy",
+	), demo.S(
+		"kwctl annotate -m policies/opa/metadata.yaml -o policies/opa/annotated-policy.wasm policies/opa/policy.wasm",
+	))
+
+	r.Step(demo.S(
+		"Inspect annotated policy",
+	), demo.S(
+		"kwctl inspect policies/opa/annotated-policy.wasm",
+	))
+
+	r.Step(demo.S(
 		"Show a request that is valid -- contains an 'owner-team' key",
 	), demo.S(
 		"bat test_data/having-label-deployment.json",
@@ -224,10 +248,10 @@ func opaPolicyBuildAndRun() *demo.Run {
 	r.Step(demo.S(
 		"Run policy with a request that is valid",
 	), demo.S(
-		"kwctl run -e opa",
+		"kwctl run",
 		`--settings-json '{"labels":[{"key":"owner-team"}]}'`,
 		"--request-path test_data/having-label-deployment.json",
-		"policies/opa/policy.wasm | jq",
+		"policies/opa/annotated-policy.wasm | jq",
 	))
 
 	r.Step(demo.S(
@@ -239,10 +263,10 @@ func opaPolicyBuildAndRun() *demo.Run {
 	r.StepCanFail(demo.S(
 		"Run policy with a request that is invalid",
 	), demo.S(
-		"kwctl run -e opa",
+		"kwctl run",
 		`--settings-json '{"labels":[{"key":"owner-team"}]}'`,
 		"--request-path test_data/missing-label-deployment.json",
-		"policies/opa/policy.wasm | jq",
+		"policies/opa/annotated-policy.wasm | jq",
 	))
 
 	return r
