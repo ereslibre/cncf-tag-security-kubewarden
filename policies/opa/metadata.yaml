@@ -1,0 +1,20 @@
+rules:
+  - apiGroups: ["*"]
+    apiVersions: ["*"]
+    resources: ["*"]
+    operations: ["*"]
+mutating: false
+contextAware: false
+executionMode: opa
+annotations:
+  io.kubewarden.policy.title: required-labels-opa
+  io.kubewarden.policy.description: Enforce required labels in your resources
+  io.kubewarden.policy.author: The Kubewarden developers
+  io.kubewarden.policy.url: https://github.com/myorg/required-labels-opa
+  io.kubewarden.policy.source: https://github.com/myorg/required-labels-opa
+  io.kubewarden.policy.license: Apache-2.0
+  io.kubewarden.policy.usage: |
+    This policy allows the following settings:
+
+      - List of required labels in the following form:
+          `{"labels": {"some-label": "some-value"}}`
