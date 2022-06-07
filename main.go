@@ -90,7 +90,8 @@ func policyServer(r *demo.Run) {
 
 	r.Step(demo.S(
 		"Generate Kubernetes manifest",
-	), demo.S("kwctl manifest",
+	), demo.S("kwctl scaffold manifest",
+		"--title generated-policy",
 		"--type ClusterAdmissionPolicy",
 		`--settings-json '{"constrained_annotations": {"cert-manager.io/cluster-issuer": "letsencrypt-production"}}'`,
 		"registry://ghcr.io/kubewarden/policies/safe-annotations:v0.1.1 | bat --language yaml",
@@ -99,7 +100,8 @@ func policyServer(r *demo.Run) {
 	r.Step(demo.S(
 		"Apply Kubernetes manifest",
 	), demo.S(
-		"kwctl manifest",
+		"kwctl scaffold manifest",
+		"--title generated-policy",
 		"--type ClusterAdmissionPolicy",
 		`--settings-json '{"constrained_annotations": {"cert-manager.io/cluster-issuer": "letsencrypt-production"}}'`,
 		"registry://ghcr.io/kubewarden/policies/safe-annotations:v0.1.1 |",
