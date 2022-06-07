@@ -17,3 +17,8 @@ psp-disallow-host-network:
 gatekeeper:
 	@clear
 	@go run . --gatekeeper
+
+.PHONY: opa
+opa:
+	@clear
+	@go run . --opa

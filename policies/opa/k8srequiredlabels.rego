@@ -14,8 +14,7 @@ deny[msg] {
 	required := {label | label := data.labels[_].key}
 	missing := required - provided
 	count(missing) > 0
-	def_msg := sprintf("you must provide labels: %v", [missing])
-	msg := get_message(input.parameters, def_msg)
+	msg := sprintf("you must provide labels: %v", [missing])
 }
 
 deny[msg] {
@@ -26,6 +25,5 @@ deny[msg] {
 	# do not match if allowedRegex is not defined, or is an empty string
 	expected.allowedRegex != ""
 	not re_match(expected.allowedRegex, value)
-	def_msg := sprintf("Label <%v: %v> does not satisfy allowed regex: %v", [key, value, expected.allowedRegex])
-	msg := get_message(input.parameters, def_msg)
+	msg := sprintf("Label <%v: %v> does not satisfy allowed regex: %v", [key, value, expected.allowedRegex])
 }

@@ -13,7 +13,7 @@ func main() {
 	d.Add(kwctlRun(), "kwctl", "kwctl")
 	d.Add(policyServerRun(), "policy-server", "policy-server")
 	d.Add(gatekeeperPolicyBuildAndRun(), "gatekeeper", "gatekeeper")
-	d.Add(pspDisallowHostNetwork(), "psp-disallow-host-network", "psp-disallow-host-network")
+	d.Add(opaPolicyBuildAndRun(), "opa", "opa")
 	d.Run()
 }
 
@@ -68,6 +68,18 @@ func kwctl(r *demo.Run) {
 		`--settings-json '{"constrained_annotations": {"cert-manager.io/cluster-issuer": "letsencrypt-production"}}'`,
 		"--request-path test_data/staging-ingress.json",
 		"registry://ghcr.io/kubewarden/policies/safe-annotations:v0.1.1 | jq"))
+
+	r.Step(demo.S(
+		"kwctl options",
+	), demo.S("kwctl --help"))
+
+	r.Step(demo.S(
+		"Report digest",
+	), demo.S("kwctl digest registry://ghcr.io/kubewarden/policies/safe-annotations:v0.1.1"))
+
+	r.Step(demo.S(
+		"Rego built-in compatibility",
+	), demo.S("kwctl --version"))
 }
 
 func policyServerRun() *demo.Run {
@@ -135,23 +147,20 @@ func gatekeeperPolicyBuildAndRun() *demo.Run {
 		"Running a gatekeeper policy",
 	)
 
-	r.Setup(setupKubernetes)
-	r.Cleanup(cleanupKubernetes)
-
 	r.Step(demo.S(
 		"Show policy",
-	), demo.S("bat gatekeeper/requiredlabels.rego"))
+	), demo.S("bat policies/gatekeeper/k8srequiredlabels.rego"))
 
 	r.Step(demo.S(
 		"Build policy",
 	), demo.S(
-		"opa build -t wasm -e k8srequiredlabels/violation -o gatekeeper/bundle.tar.gz gatekeeper/requiredlabels.rego",
+		"opa build -t wasm -e k8srequiredlabels/violation -o policies/gatekeeper/bundle.tar.gz policies/gatekeeper/k8srequiredlabels.rego",
 	))
 
 	r.Step(demo.S(
 		"Extract policy",
 	), demo.S(
-		"tar -C gatekeeper -xf gatekeeper/bundle.tar.gz /policy.wasm",
+		"tar -C policies/gatekeeper -xf policies/gatekeeper/bundle.tar.gz /policy.wasm",
 	))
 
 	r.Step(demo.S(
@@ -166,7 +175,7 @@ func gatekeeperPolicyBuildAndRun() *demo.Run {
 		"kwctl run -e gatekeeper",
 		`--settings-json '{"labels":[{"key":"owner-team"}]}'`,
 		"--request-path test_data/having-label-deployment.json",
-		"gatekeeper/policy.wasm | jq",
+		"policies/gatekeeper/policy.wasm | jq",
 	))
 
 	r.Step(demo.S(
@@ -181,105 +190,59 @@ func gatekeeperPolicyBuildAndRun() *demo.Run {
 		"kwctl run -e gatekeeper",
 		`--settings-json '{"labels":[{"key":"owner-team"}]}'`,
 		"--request-path test_data/missing-label-deployment.json",
-		"gatekeeper/policy.wasm | jq",
-	))
-
-	r.Step(demo.S(
-		"Run the policy on top of Kubernetes",
-	), demo.S(
-		"bat kubernetes/required-owner-team.yaml",
-	))
-
-	r.Step(demo.S(
-		"Run the policy on top of Kubernetes",
-	), demo.S(
-		"kubectl apply -f kubernetes/required-owner-team.yaml",
-	))
-
-	r.Step(demo.S(
-		"Run the policy on top of Kubernetes",
-	), demo.S(
-		"kubectl wait --for=condition=PolicyActive clusteradmissionpolicy required-owner-team",
-	))
-
-	r.Step(demo.S(
-		"Run the policy on top of Kubernetes",
-	), demo.S(
-		"kubectl get -o wide clusteradmissionpolicy",
-	))
-
-	r.Step(demo.S(
-		"Show a Deployment with an owner-team label",
-	), demo.S(
-		"bat test_data/having-label-deployment-resource.yaml",
-	))
-
-	r.Step(demo.S(
-		"Create a Deployment with an owner-team label",
-	), demo.S(
-		"kubectl apply -f test_data/having-label-deployment-resource.yaml",
-	))
-
-	r.Step(demo.S(
-		"Show a Deployment without an owner-team label",
-	), demo.S(
-		"bat test_data/missing-label-deployment-resource.yaml",
-	))
-
-	r.StepCanFail(demo.S(
-		"Try to create a Deployment with a missing owner-team label",
-	), demo.S(
-		"kubectl apply -f test_data/missing-label-deployment-resource.yaml",
+		"policies/gatekeeper/policy.wasm | jq",
 	))
 
 	return r
 }
 
-func pspDisallowHostNetwork() *demo.Run {
+func opaPolicyBuildAndRun() *demo.Run {
 	r := demo.NewRun(
-		"Running a Pod Security Policy replacement",
+		"Running an Open Policy Agent policy",
 	)
-
-	r.Setup(setupKubernetes)
-	r.Cleanup(cleanupKubernetes)
-
 	r.Step(demo.S(
-		"Pull a policy",
-	), demo.S("kwctl pull registry://ghcr.io/kubewarden/policies/host-namespaces-psp:v0.1.1"))
-
+		"Show policy",
+	), demo.S("bat policies/opa/utility/policy.rego policies/opa/k8srequiredlabels.rego"))
 	r.Step(demo.S(
-		"Apply Kubernetes manifest",
+		"Build policy",
 	), demo.S(
-		"kubectl apply -f test_data/host-namespaces-policy.yaml"))
-
-	r.Step(demo.S(
-		"Wait for our policy to be active",
-	), demo.S(
-		"kubectl wait --for=condition=PolicyActive clusteradmissionpolicy disallow-host-network-except-kube-system",
+		"opa build -t wasm -e policy/main -o policies/opa/bundle.tar.gz policies/opa/utility/policy.rego policies/opa/k8srequiredlabels.rego",
 	))
 
 	r.Step(demo.S(
-		"Show a pod with hostNetwork: true in the default namespace",
+		"Extract policy",
 	), demo.S(
-		"bat test_data/host-network-pod.yaml",
+		"tar -C policies/opa -xf policies/opa/bundle.tar.gz /policy.wasm",
+	))
+
+	r.Step(demo.S(
+		"Show a request that is valid -- contains an 'owner-team' key",
+	), demo.S(
+		"bat test_data/having-label-deployment.json",
+	))
+
+	r.Step(demo.S(
+		"Run policy with a request that is valid",
+	), demo.S(
+		"kwctl run -e opa",
+		`--settings-json '{"labels":[{"key":"owner-team"}]}'`,
+		"--request-path test_data/having-label-deployment.json",
+		"policies/opa/policy.wasm | jq",
+	))
+
+	r.Step(demo.S(
+		"Show a request that is invalid -- does not contain an 'owner-team' key",
+	), demo.S(
+		"bat test_data/missing-label-deployment.json",
 	))
 
 	r.StepCanFail(demo.S(
-		"Try to create a pod with hostNetwork: true in the default namespace",
+		"Run policy with a request that is invalid",
 	), demo.S(
-		"kubectl apply -f test_data/host-network-pod.yaml",
-	))
-
-	r.Step(demo.S(
-		"Show a pod with hostNetwork: true in the kube-system namespace",
-	), demo.S(
-		"bat test_data/host-network-pod-kube-system.yaml",
-	))
-
-	r.Step(demo.S(
-		"Try to create a pod with hostNetwork: true in the kube-system namespace",
-	), demo.S(
-		"kubectl apply -f test_data/host-network-pod-kube-system.yaml",
+		"kwctl run -e opa",
+		`--settings-json '{"labels":[{"key":"owner-team"}]}'`,
+		"--request-path test_data/missing-label-deployment.json",
+		"policies/opa/policy.wasm | jq",
 	))
 
 	return r
